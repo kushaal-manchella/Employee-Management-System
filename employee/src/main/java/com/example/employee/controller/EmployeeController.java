@@ -73,7 +73,6 @@ public class EmployeeController {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 	
-	// Might have to modify this one
 	@ControllerAdvice
 	public class RestExceptionHandler {
 
