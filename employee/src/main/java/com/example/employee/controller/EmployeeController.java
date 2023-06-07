@@ -1,5 +1,6 @@
 package com.example.employee.controller;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -13,13 +14,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import com.example.employee.enums.Department;
 import com.example.employee.model.Employee;
-import com.example.employee.requests.EmployeeRequest;
 import com.example.employee.service.CostAllocationService;
 import com.example.employee.service.EmployeeService;
 import com.example.exceptions.InvalidInputException;
+import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
 
 
 @RestController
@@ -32,12 +34,12 @@ public class EmployeeController {
     CostAllocationService costAllocationService;
     
 	@RequestMapping(value="/employees", method=RequestMethod.POST)
-	public ResponseEntity<Employee> createEmployee(@RequestBody EmployeeRequest emp) {
+	public ResponseEntity<Employee> createEmployee(@RequestBody Employee emp) {
 	    return empService.createEmployee(emp);
 	}
 	
 	@RequestMapping(value="/employees/{employeeId}", method=RequestMethod.PUT)
-	public ResponseEntity<Employee> updateEmployee(@PathVariable(value = "employeeId") Long id, @RequestBody EmployeeRequest emp) {
+	public ResponseEntity<Employee> updateEmployee(@PathVariable(value = "employeeId") Long id, @RequestBody Employee emp) {
 	    return empService.updateEmployee(id, emp);
 	}
 	
@@ -73,6 +75,7 @@ public class EmployeeController {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 	
+	// Look for a cleaner approach to exposing error message to client
 	@ControllerAdvice
 	public class RestExceptionHandler {
 
@@ -80,6 +83,18 @@ public class EmployeeController {
 	    public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
 	        return new ResponseEntity<>("Could not find employee with provided employeeID" , HttpStatus.BAD_REQUEST);
 	    }
+	    
+	    @ExceptionHandler(HttpMessageNotReadableException.class)
+	    public ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+	        Throwable cause = ex.getCause();
+	        if (cause instanceof InvalidTypeIdException) {
+	            InvalidTypeIdException ite = (InvalidTypeIdException) cause;
+	            String message = ite.getMessage();
+	            return ResponseEntity.badRequest().body(Collections.singletonMap("error", message));
+	        }
+	        return ResponseEntity.badRequest().build();
+	    }    
 	}
+	
 }
 
