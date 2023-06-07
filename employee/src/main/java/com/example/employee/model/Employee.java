@@ -1,5 +1,6 @@
 package com.example.employee.model;
 
+
 import java.sql.Date;
 import com.example.exceptions.InvalidInputException;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -29,30 +30,30 @@ import jakarta.persistence.DiscriminatorType;
 })
 public abstract class Employee {
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="employee_id")
-    private Long employeeId;
-    
-    @Column(name="name")
-    private String name;
-    
-    @Column(name="dob")
-    private Date dob;
-    
-    @Column(name="email")
-    private String emailId;
-    
-    @Column(name="salary")
-    private int salary; 
-    
-    @Column(name="reporting_manager")
-    private Long reportingManager;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="employee_id")
+	private Long employeeId;
+
+	@Column(name="name")
+	private String name;
+
+	@Column(name="dob")
+	private Date dob;
+
+	@Column(name="email")
+	private String emailId;
+
+	@Column(name="salary")
+	private int salary; 
+
+	@Column(name="reporting_manager")
+	private Long reportingManager;
 
 	@Column(name="department")
-    private String department;
-    
-    @Column(name="role", insertable = false, updatable = false)
-    private String role;
+	private String department;
+
+	@Column(name="role", insertable = false, updatable = false)
+	private String role;
     
 	public Long getEmployeeId() {
 		return employeeId;
@@ -110,7 +111,7 @@ public abstract class Employee {
 		this.department = department; 
 	}
 	
-    public String getRole() {
+	public String getRole() {
 		return role;
 	}
 
