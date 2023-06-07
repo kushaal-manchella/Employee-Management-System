@@ -117,7 +117,7 @@ public class EmployeeService {
 		
 	}
 	
-	protected void getEmployeesInHierarchy(Employee employee, Object parentMap){ 
+	private void getEmployeesInHierarchy(Employee employee, Object parentMap){ 
 		HashMap<String,Object> map = (HashMap<String,Object>) parentMap;
 		map.put(employee.getName(), new HashMap<String, Object>());
 		
