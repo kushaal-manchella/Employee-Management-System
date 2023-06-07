@@ -1,5 +1,4 @@
 package com.example.employee.service;
-import java.sql.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,6 @@ import com.example.employee.model.Employee;
 import com.example.employee.model.Manager;
 import com.example.employee.model.Qatester;
 import com.example.employee.repository.EmployeeRepository;
-import com.example.employee.requests.EmployeeRequest;
 import com.example.exceptions.InvalidInputException;
 
 import java.util.HashMap;
@@ -26,73 +24,66 @@ public class EmployeeService {
 		EmployeeRepository empRepository;
 	
 	@PostMapping
-	public ResponseEntity<Employee> createEmployee(EmployeeRequest requestBody) {
-		// get employee details through requestBody 
-		Long employeeId = requestBody.getEmployeeId();
-		String name = requestBody.getName();
-		Date dob = requestBody.getDob();
-		String emailId = requestBody.getEmailId();
-		int salary = requestBody.getSalary();
-		Long reportingManager = requestBody.getReportingManager();
-		String department = requestBody.getDepartment();
-		String role = requestBody.getRole();
+	public ResponseEntity<Employee> createEmployee(Employee requestBody) {
 		
 		// validate the requests 
-		if (reportingManager == null) {
-			validateRequest(name, dob, emailId, salary, department, role);
-		}
-		else {
-			validateRequest(name, dob, emailId, salary, reportingManager, department, role);
+		requestBody.validate();
+		
+		// reportingManager validation 
+		if (requestBody.getReportingManager() != null)
+		{
+			if (!empRepository.existsById(requestBody.getReportingManager())) {
+				throw new InvalidInputException("The reportingManager of provided Id does not exist in the table");
+			}
+			else if (!sameDepartmentAsManager(requestBody.getDepartment(), requestBody.getReportingManager())) {
+				throw new InvalidInputException("This employee cannot be in a different department than their manager");
+			}
 		}
 		
 		// create the right object depending on the role
-		if ("developer".equals(role)) {
-			Developer newDev = new Developer(employeeId, name, dob, emailId, salary, reportingManager, department);
-			empRepository.save(newDev);
-			return new ResponseEntity<>(newDev, HttpStatus.CREATED);
-		} else if ("qatester".equals(role)) {
-			Qatester newTester = new Qatester(employeeId, name, dob, emailId, salary, reportingManager, department);
-			empRepository.save(newTester);
-			return new ResponseEntity<>(newTester, HttpStatus.CREATED);
-		} else if ("manager".equals(role)) {
-			Manager newManager = new Manager(employeeId, name, dob, emailId, salary, reportingManager, department);
-			empRepository.save(newManager);
-			return new ResponseEntity<>(newManager, HttpStatus.CREATED);
+		if ("developer".equals(requestBody.getRole())) {
+			requestBody = new Developer();
+			empRepository.save(requestBody);
+			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
+		} else if ("qatester".equals(requestBody.getRole())) {
+			requestBody = new Qatester();
+			empRepository.save(requestBody);
+			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
+		} else if ("manager".equals(requestBody.getRole())) {
+			requestBody = new Manager();
+			empRepository.save(requestBody);
+			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
 		} else {
 			throw new InvalidInputException("Invalid role. Role must be either manager, developer or qatester");
 		}
 		
 	}
 	
-	public ResponseEntity<Employee> updateEmployee(Long employeeId, EmployeeRequest requestBody) {
-		if (!"developer".equals(requestBody.getRole()) && !"qatester".equals(requestBody.getRole()) && !"manager".equals(requestBody.getRole())) {
-			throw new InvalidInputException("Invalid role. Role must be either manager, developer or qatester");
-		}
-		Employee emp = empRepository.findById(employeeId).get();
+	public ResponseEntity<Employee> updateEmployee(Long employeeId, Employee requestBody) {
 		
-		if (!sameDepartmentAsManager(requestBody.getDepartment(), requestBody.getReportingManager())) {
-			throw new InvalidInputException("This employee cannot be in a different department than their manager");
-		}
+		// validate the request
+		requestBody.validate();
+		
+		Employee emp = empRepository.findById(employeeId).get();
 
-		// only set the parameters that were passed in through the body. Ignore null values
-		if (requestBody.getName() != null) {
-			emp.setName(requestBody.getName());
+		// reporting manager validation
+		if (requestBody.getReportingManager() != null)
+		{
+			if (!empRepository.existsById(requestBody.getReportingManager())) {
+				throw new InvalidInputException("The reportingManager of provided Id does not exist in the table");
+			}
+			else if (!sameDepartmentAsManager(requestBody.getDepartment(), requestBody.getReportingManager())) {
+				throw new InvalidInputException("This employee cannot be in a different department than their manager");
+			}
 		}
-		if (requestBody.getDob() != null) {
-			emp.setDob(requestBody.getDob());
-		}
-		if (requestBody.getEmailId() != null) {
-			emp.setEmailId(requestBody.getEmailId());
-		}
-		if (requestBody.getSalary() != 0) {
-			emp.setSalary(requestBody.getSalary());
-		}
-		if (requestBody.getReportingManager() != null) {
-			emp.setReportingManager(requestBody.getReportingManager());
-		}
-		if (requestBody.getDepartment() != null) {
-			emp.setDepartment(requestBody.getDepartment());
-		}
+		
+		// update existing record 
+		emp.setName(requestBody.getName());
+		emp.setDob(requestBody.getDob());
+		emp.setEmailId(requestBody.getEmailId());
+		emp.setSalary(requestBody.getSalary());
+		emp.setReportingManager(requestBody.getReportingManager());
+		emp.setDepartment(requestBody.getDepartment());
 
 		empRepository.save(emp);
 		
@@ -140,58 +131,6 @@ public class EmployeeService {
 		}
 		
 		return;
-	}
-	
-	// Validations should ideally be in model classes but repository is being used in these which might be a good indication to leave them in the service class 
-	private void validateRequest(String name, Date dob, String emailId, int salary, String department, String role) {
-		if(name == null) {
-			throw new InvalidInputException("Please provide a name field");
-		}
-		else if (dob == null) {
-			throw new InvalidInputException("Please provide a dob field");
-		}
-		else if (emailId == null) {
-			throw new InvalidInputException("Please provide an emailId field");
-		}
-		else if (salary == 0) {
-			throw new InvalidInputException("Please provide a salary field");
-		}
-		else if (department == null) {
-			throw new InvalidInputException("Please provide a department field");
-		}
-		else if (!"manager".equals(role) && !"qatester".equals(role) && !"developer".equals(role)) {
-			throw new InvalidInputException("Invalid role. Role must be either manager, developer or qatester");
-		}
-	}
-	
-	private void validateRequest(String name, Date dob, String emailId, int salary, Long reportingManager, String department, String role) {
-		if(name == null) {
-			throw new InvalidInputException("Please provide a name field");
-		}
-		else if (dob == null) {
-			throw new InvalidInputException("Please provide a dob field");
-		}
-		else if (emailId == null) {
-			throw new InvalidInputException("Please provide an emailId field");
-		}
-		else if (salary == 0) {
-			throw new InvalidInputException("Please provide a salary field");
-		}
-		else if (department == null) {
-			throw new InvalidInputException("Please provide a department field");
-		}
-		else if (reportingManager == null) {
-			throw new InvalidInputException("Please provide a reportingManager field");
-		}
-		else if (!empRepository.existsById(reportingManager)) {
-			throw new InvalidInputException("The reportingManager of provided Id does not exist in the table");
-		}
-		else if (!sameDepartmentAsManager(department, reportingManager)) {
-			throw new InvalidInputException("This employee cannot be in a different department than their manager");
-		}
-		else if (!"manager".equals(role) && !"qatester".equals(role) && !"developer".equals(role)) {
-			throw new InvalidInputException("Invalid role. Role must be either manager, developer or qatester");
-		}
 	}
 	
 	private boolean sameDepartmentAsManager(String department, Long reportingManager) {
