@@ -1,6 +1,6 @@
 # Employee-Management-System
 
-This spring boot project leverages REST APIs to perform CRUD operations on a MySql Database.  
+This spring boot project leverages REST APIs to perform CRUD operations on a MySql Database. The entry point of the application can be found in the EmployeeApplication.java file which lives in the directory: [Employee-Management-System/tree/main/employee/src/main/java/com/example/employee](https://github.com/kushaal-manchella/Employee-Management-System/tree/main/employee/src/main/java/com/example/employee). This directory also contains subdirectories which store the Controllers, Repositories, Services and Models in the application. 
 
 Employee data is stored in one table titled “employee’ in the MySQL database. The following information is captured for each Employee:
 - Name 
