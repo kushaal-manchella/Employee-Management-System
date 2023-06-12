@@ -2,4 +2,4 @@
 employee/src/main/resources/application.properties
 
 #ignore target files 
-employee/target/*
+employee/target

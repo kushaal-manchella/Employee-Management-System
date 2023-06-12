@@ -29,7 +29,7 @@ public class EmployeeService {
 		// validate the requests 
 		requestBody.validate();
 		
-		// reportingManager validation 
+		// reporting manager and department validations. Not part of the validate() Employee method as a best practice to keep repository calls in service class
 		if (requestBody.getReportingManager() != null)
 		{
 			if (!empRepository.existsById(requestBody.getReportingManager())) {
@@ -39,23 +39,9 @@ public class EmployeeService {
 				throw new InvalidInputException("This employee cannot be in a different department than their manager");
 			}
 		}
-		
-		// create the right object depending on the role
-		if ("developer".equals(requestBody.getRole())) {
-			requestBody = new Developer();
-			empRepository.save(requestBody);
-			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
-		} else if ("qatester".equals(requestBody.getRole())) {
-			requestBody = new Qatester();
-			empRepository.save(requestBody);
-			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
-		} else if ("manager".equals(requestBody.getRole())) {
-			requestBody = new Manager();
-			empRepository.save(requestBody);
-			return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
-		} else {
-			throw new InvalidInputException("Invalid role. Role must be either manager, developer or qatester");
-		}
+		// save the new employee. Hibernate will know which type of object to create based on the "role" parameter. 
+		empRepository.save(requestBody);
+		return new ResponseEntity<>(requestBody, HttpStatus.CREATED);
 		
 	}
 	
@@ -66,7 +52,7 @@ public class EmployeeService {
 		
 		Employee emp = empRepository.findById(employeeId).get();
 
-		// reporting manager validation
+		// reporting manager and department validations. Not part of the validate() Employee method as a best practice to keep repository calls in service class
 		if (requestBody.getReportingManager() != null)
 		{
 			if (!empRepository.existsById(requestBody.getReportingManager())) {

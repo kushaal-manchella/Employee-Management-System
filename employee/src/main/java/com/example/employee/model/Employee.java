@@ -16,13 +16,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 
-
-
 @Entity
 @Table(name = "employee")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "role", discriminatorType = DiscriminatorType.STRING)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "role")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "role")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = Developer.class, name = "developer"),
     @JsonSubTypes.Type(value = Manager.class, name = "manager"),
@@ -33,7 +31,7 @@ public abstract class Employee {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="employee_id")
 	private Long employeeId;
-
+	
 	@Column(name="name")
 	private String name;
 
